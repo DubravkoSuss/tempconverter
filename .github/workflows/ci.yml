@@ -37,6 +37,7 @@ jobs:
           DB_PASS: apppass
           DB_HOST: 127.0.0.1
           DB_NAME: tempconverter
+          PYTHONPATH: .
         run: pytest tests/ -v --cov=app
 
   build:
