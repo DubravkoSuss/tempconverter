@@ -33,7 +33,10 @@ class Temperature(db.Model):
     user_agent = db.Column(db.String(200), nullable=False)
 
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception:
+        pass
 
 class TemperatureForm(FlaskForm):
     celsius = StringField('Celsius', validators=[InputRequired()])
@@ -54,4 +57,5 @@ def index():
     return render_template('index.html', form=form, log_entries=log_entries, student=student, college=college)
 
 if __name__ == '__main__':
+    init_db()
     app.run(host='0.0.0.0', port=5000, debug=True)

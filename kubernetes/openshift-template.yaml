@@ -1,0 +1,173 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: tempconverter-template
+  annotations:
+    description: "TempConverter application with MySQL database"
+objects:
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: mysql-secret
+  stringData:
+    root-password: ${MYSQL_ROOT_PASSWORD}
+    user: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    database: ${MYSQL_DATABASE}
+
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: mysql-pvc
+  spec:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: mysql
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: mysql
+    template:
+      metadata:
+        labels:
+          app: mysql
+      spec:
+        containers:
+        - name: mysql
+          image: mysql:8
+          env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: root-password
+          - name: MYSQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: database
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: user
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: password
+          ports:
+          - containerPort: 3306
+          volumeMounts:
+          - name: mysql-storage
+            mountPath: /var/lib/mysql
+        volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+            claimName: mysql-pvc
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: mysql
+  spec:
+    selector:
+      app: mysql
+    ports:
+    - port: 3306
+      targetPort: 3306
+
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: tempconverter
+  spec:
+    replicas: 2
+    selector:
+      matchLabels:
+        app: tempconverter
+    template:
+      metadata:
+        labels:
+          app: tempconverter
+      spec:
+        containers:
+        - name: tempconverter
+          image: ${IMAGE_NAME}
+          env:
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: user
+          - name: DB_PASS
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: password
+          - name: DB_HOST
+            value: mysql
+          - name: DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: database
+          - name: STUDENT
+            value: ${STUDENT_NAME}
+          - name: COLLEGE
+            value: ${COLLEGE_NAME}
+          ports:
+          - containerPort: 5000
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: tempconverter
+  spec:
+    selector:
+      app: tempconverter
+    ports:
+    - port: 80
+      targetPort: 5000
+
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: tempconverter
+  spec:
+    to:
+      kind: Service
+      name: tempconverter
+    port:
+      targetPort: 80
+
+parameters:
+- name: MYSQL_ROOT_PASSWORD
+  description: MySQL root password
+  value: rootpass
+- name: MYSQL_USER
+  description: MySQL application user
+  value: appuser
+- name: MYSQL_PASSWORD
+  description: MySQL application password
+  value: apppass
+- name: MYSQL_DATABASE
+  description: MySQL database name
+  value: tempconverter
+- name: IMAGE_NAME
+  description: Container image for tempconverter
+  value: tempconverter:latest
+- name: STUDENT_NAME
+  description: Student name to display
+  value: Dubravko Posavac
+- name: COLLEGE_NAME
+  description: College name to display
+  value: Algebra Bernays University

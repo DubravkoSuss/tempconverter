@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempconverter
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tempconverter
+  template:
+    metadata:
+      labels:
+        app: tempconverter
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - tempconverter
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: tempconverter
+        image: tempconverter:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: user
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+        - name: DB_HOST
+          value: mysql
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: database
+        - name: STUDENT
+          value: "Dubravko Posavac"
+        - name: COLLEGE
+          value: "Algebra Bernays University"
+        ports:
+        - containerPort: 5000
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"

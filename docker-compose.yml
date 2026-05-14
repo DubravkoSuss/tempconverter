@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: tempconverter
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppass
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    image: tempconverter:latest
+    ports:
+      - "5000:5000"
+    environment:
+      DB_USER: appuser
+      DB_PASS: apppass
+      DB_HOST: db
+      DB_NAME: tempconverter
+      STUDENT: "Dubravko Posavac"
+      COLLEGE: "Algebra Bernays University"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
