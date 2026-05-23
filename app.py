@@ -16,7 +16,10 @@ db_pass = environ.get('DB_PASS', 'CHANGEME')
 db_host = environ.get('DB_HOST', 'CHANGEME')
 db_name = environ.get('DB_NAME', 'CHANGEME')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://'+db_user+':'+db_pass+'@'+db_host+'/'+db_name
+app.config['SQLALCHEMY_DATABASE_URI'] = environ.get(
+    'DATABASE_URL',
+    'mysql+pymysql://'+db_user+':'+db_pass+'@'+db_host+'/'+db_name
+)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 student = environ.get('STUDENT', 'Default Student')
@@ -57,5 +60,4 @@ def index():
     return render_template('index.html', form=form, log_entries=log_entries, student=student, college=college)
 
 if __name__ == '__main__':
-    init_db()
     app.run(host='0.0.0.0', port=5000, debug=True)

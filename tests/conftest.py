@@ -1,5 +1,8 @@
 import os
-os.environ.setdefault('DB_USER', 'appuser')
-os.environ.setdefault('DB_PASS', 'apppass')
-os.environ.setdefault('DB_HOST', '10.89.1.7')
-os.environ.setdefault('DB_NAME', 'tempconverter')
+
+# Use SQLite in-memory for fast, isolated tests (no MySQL needed)
+os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
+os.environ.setdefault('DB_USER', 'test')
+os.environ.setdefault('DB_PASS', 'test')
+os.environ.setdefault('DB_HOST', 'localhost')
+os.environ.setdefault('DB_NAME', 'test')
