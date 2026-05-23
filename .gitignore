@@ -1,3 +1,5 @@
-Dockerfile
 __pycache__/
-instance/
+venv/
+*.pyc
+*.pyo
+.pytest_cache/
